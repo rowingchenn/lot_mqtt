@@ -6,47 +6,49 @@
       </div>
       <el-form ref="configForm" hide-required-asterisk size="small" label-position="top" :model="connection">
         <el-row :gutter="20">
+
           <el-col :span="8">
             <el-form-item prop="host" label="Host">
-              <el-row :gutter="10">
-                <el-col :span="7">
-                  <el-select v-model="connection.protocol" @change="handleProtocolChange">
-                    <el-option label="ws://" value="ws"></el-option>
-                    <el-option label="wss://" value="wss"></el-option>
-                    <el-option label="mqtt://" value="mqtt"></el-option>
-                  </el-select>
-                </el-col>
-                <el-col :span="17">
-                  <el-input v-model="connection.host"></el-input>
-                </el-col>
-              </el-row>
+              <el-input v-model="connection.host" placeholder="100.81.86.127"></el-input>
             </el-form-item>
           </el-col>
+
           <el-col :span="8">
             <el-form-item prop="port" label="Port">
               <el-input v-model.number="connection.port" type="number" placeholder="8083/8084"></el-input>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item prop="endpoint" label="Mountpoint">
-              <el-input v-model="connection.endpoint" placeholder="/mqtt"></el-input>
-            </el-form-item>
-          </el-col>
+
           <el-col :span="8">
             <el-form-item prop="clientId" label="Client ID">
               <el-input v-model="connection.clientId"> </el-input>
             </el-form-item>
           </el-col>
+
           <el-col :span="8">
             <el-form-item prop="username" label="Username">
               <el-input v-model="connection.username"></el-input>
             </el-form-item>
           </el-col>
+
           <el-col :span="8">
             <el-form-item prop="password" label="Password">
               <el-input v-model="connection.password"></el-input>
             </el-form-item>
           </el-col>
+
+          <el-col :span="8">
+            <el-form-item prop="keepAlive" label="Keep Alive">
+              <el-input v-model.number="connection.keepAlive" type="number" placeholder="Keep Alive interval"></el-input>
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="8">
+            <el-form-item prop="cleanSession" label="Clean Session">
+              <el-switch v-model="connection.cleanSession"></el-switch>
+            </el-form-item>
+          </el-col>
+
 
           <el-col :span="24">
             <el-button
@@ -68,6 +70,7 @@
         </el-row>
       </el-form>
     </el-card>
+
     <el-card shadow="always" style="margin-bottom:30px;">
       <div class="emq-title">
         Subscribe
@@ -240,6 +243,7 @@
 /* eslint-disable */
 import mqtt from 'mqtt'
 import * as echarts from 'echarts';
+import { Notification } from 'element-ui';
 
 export default {
   name: 'Home',
@@ -247,18 +251,11 @@ export default {
   data() {
     return {
       connection: {
-        protocol: 'mqtt',
-        //protocol: 'ws',
-        //host: 'broker.emqx.io',
-        //host: '127.0.0.1',
+        protocol: 'ws',
         host:'100.81.86.127',
-        // ws: 8083; wss: 8084
-        port: 1883,
-        endpoint: '/mqtt',
-        // for more options, please refer to https://github.com/mqttjs/MQTT.js#mqttclientstreambuilder-options
-        clean: true,
-        connectTimeout: 30 * 1000, // ms
-        reconnectPeriod: 4000, // ms
+        port: 9001,
+        cleanSession: true,
+        keepAlive: 60, // 默认keep alive值
         clientId:
           'emqx_vue_' +
           Math.random()
@@ -267,6 +264,8 @@ export default {
         // auth
         username: 'admin',
         password: '127339',
+        connectTimeout: 30 * 1000, // ms
+        reconnectPeriod: 4000, // ms
       },
       subscription: {
         topic: '',
@@ -609,45 +608,94 @@ export default {
       }
     },
     createConnection() {
-      try {
-        this.connecting = true
-        const { protocol, host, port, endpoint, ...options } = this.connection
-        const connectUrl = `mqtt://100.81.86.127:1883`
-        //const connectUrl = `${protocol}://${host}:${port}${endpoint}`
-        this.client = mqtt.connect(connectUrl, options)
-        if (this.client.on) {
-          this.client.on('connect', () => {
-            this.connecting = false
-            console.log('Connection succeeded!')
-          })
-          this.client.on('reconnect', this.handleOnReConnect)
-          this.client.on('error', error => {
-            console.log('Connection failed', error)
-            console.log(connectUrl);
-          })
-          this.client.on('message', (topic, message) => {
-            this.receiveNews = this.receiveNews.concat(message)
-            //console.log(`Received message ${message} from topic ${topic}`)
-            this.generateLineChart()
-          })
+        // 构建连接URL
+        const url = `${this.connection.protocol}://${this.connection.host}:${this.connection.port}`;
+
+        // 构建连接选项
+        const options = {
+          clientId: this.connection.clientId,
+          keepalive: this.connection.keepAlive,
+          clean: this.connection.cleanSession,
+          reconnectPeriod: this.connection.reconnectPeriod, // 重连周期设置为1秒
+          connectTimeout: this.connection.connectTimeout, // 连接超时时间设置为30秒
+          username: this.connection.username,
+          password: this.connection.password,
+          // 如果使用TLS/SSL，可能需要额外的配置选项
+        };
+
+        // 使用MQTT.js的connect方法创建MQTT客户端实例
+        this.client = mqtt.connect(url, options);
+
+        // 监听连接事件
+        this.client.on('connect', () => {
+          console.log('Connected successfully!')
+          Notification({
+            title: 'Success',
+            message: 'Connected to MQTT Broker!',
+            type: 'success',
+            duration: 5000 // 显示时长(毫秒)
+          });
+          this.connecting = false;
+          // 连接成功后的其他操作...
+        });
+
+        // 监听连接错误事件
+        this.client.on('error', (error) => {
+          Notification({
+            title: 'Error',
+            message: `Connection error: ${error.message}`,
+            type: 'error',
+            duration: 5000 // 显示时长(毫秒)
+          });
+          this.connecting = false; // 更新连接状态
+          // 连接失败的其他操作...
+        });
+
+      // 监听连接结束事件
+      this.client.on('close', () => {
+        if (this.client && !this.client.connected) {
+          Notification.error({
+            title: 'Connection Closed',
+            message: 'MQTT connection was closed.',
+            duration: 5000
+          });
         }
-      } catch (error) {
-        this.connecting = false
-        console.log('mqtt.connect error', error)
-      }
+        this.connecting = false; // 更新连接状态
+      });
     },
     // subscribe topic
     // https://github.com/mqttjs/MQTT.js#mqttclientsubscribetopictopic-arraytopic-object-options-callback
     doSubscribe() {
-      const { topic, qos } = this.subscription
+      const { topic, qos } = this.subscription;
+
+      // Ensure that topic is not empty or whitespace
+      if (!topic.trim()) {
+        Notification.error({
+          title: 'Subscription Error',
+          message: 'Topic cannot be empty.',
+          duration: 5000
+        });
+        return;
+      }
+
       this.client.subscribe(topic, { qos }, (error, res) => {
         if (error) {
-          console.log('Subscribe to topics error', error)
-          return
+          Notification.error({
+            title: 'Subscription Failure',
+            message: `MQTT subscription failed: ${error.message}`,
+            duration: 5000
+          });
+        } else {
+          // res is an array of granted subscriptions, which can be useful for debugging
+          console.log('Subscription granted:', res);
+          this.subscribeSuccess = true;
+          Notification.success({
+            title: 'Subscription Success',
+            message: `Subscribed to "${topic}" with QoS ${qos}.`,
+            duration: 5000
+          });
         }
-        this.subscribeSuccess = true
-        console.log('Subscribe to topics res', res)
-      })
+      });
     },
     // unsubscribe topic
     // https://github.com/mqttjs/MQTT.js#mqttclientunsubscribetopictopic-array-options-callback
