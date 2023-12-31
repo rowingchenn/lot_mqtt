@@ -1,5 +1,6 @@
 <template>
   <div class="home-container">
+    <!-- 连接broker的卡片 -->
     <el-card shadow="always" style="margin-bottom:30px;">
       <div class="emq-title">
         Configuration
@@ -71,6 +72,7 @@
       </el-form>
     </el-card>
 
+    <!-- 订阅topic的卡片 -->
     <el-card shadow="always" style="margin-bottom:30px;">
       <div class="emq-title">
         Subscribe
@@ -124,118 +126,155 @@
       </el-form>
     </el-card>
 
-    <el-card shadow="always" style="margin-bottom:30px;">
+    <!-- 发布消息的卡片 -->
+    <el-card class="box-card" style="margin-bottom:30px;">
       <div class="emq-title">
-        Publish
+        <span>Publish Message</span>
       </div>
-      <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publish">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <div class="custom-select-wrapper">
-              <el-form-item prop="topic" label="Topic">
-                <el-select v-model="publish.topic" placeholder="请选择">
-                  <el-option
-                    v-for="item in topicOptions"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value">
-                  </el-option>
-                </el-select>
-              </el-form-item>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="qos" label="QoS">
-              <el-select v-model="publish.qos">
-                <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          
-          <el-col :span="24">
-            <el-form-item prop="file">
-              <el-upload
-                class="upload-demo"
-                :show-file-list="false"
-                :on-change="uploadFile"
-              >
-                <el-button
-                  size="small"
-                  type="primary"
-                  class="conn-btn"
-                  :style="{ borderColor: '#409EFF', backgroundColor: '#409EFF', fontSize: '14px' }"
-                >
-                  Upload
-                </el-button>
-              </el-upload>
-            </el-form-item>
-          </el-col>
-
-        </el-row>
-        <!--
-        <el-col :span="8">
-          <el-form-item prop="payload" label="Payload">
-            <el-input v-model="publish.payload"></el-input>
-          </el-form-item>
-        </el-col>
-        -->
+      <el-form @submit.prevent="doPublish">
+        <el-form-item label="Topic">
+          <el-input v-model="publishData.publishTopic" placeholder="Enter topic to publish to"></el-input>
+        </el-form-item>
+        <el-form-item label="Message">
+          <el-input
+              type="textarea"
+              v-model="publishData.publishMessage"
+              placeholder="Enter message to publish">
+          </el-input>
+        </el-form-item>
+        <el-form-item label="QoS">
+          <el-select v-model="publishData.qos" placeholder="Select QoS">
+            <el-option label="0 - At most once" :value="0"></el-option>
+            <el-option label="1 - At least once" :value="1"></el-option>
+            <el-option label="2 - Exactly once" :value="2"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" native-type="submit">Publish</el-button>
+        </el-form-item>
       </el-form>
-      <div>
-        <el-table
-          ref="multipleTable"
-          :data="tableData"
-          tooltip-effect="dark"
-          style="width: 100%"
-          max-height="250"
-          @selection-change="handleSelectionChange"
-        >
-           <!-- 勾选列配置 -->
-          <el-table-column type="selection" width="55"></el-table-column>
-
-          <!-- 表格列配置 -->
-          <el-table-column label="Date" width="180">
-            <template slot-scope="scope">{{ scope.row.date }}</template>
-          </el-table-column>
-
-          <el-table-column label="Average" width="180">
-            <template slot-scope="scope">{{ scope.row.avg }}</template>
-          </el-table-column>
-
-          <el-table-column label="Maximum" width="180">
-            <template slot-scope="scope">{{ scope.row.max }}</template>
-          </el-table-column>
-
-          <el-table-column label="Minimum" width="180">
-            <template slot-scope="scope">{{ scope.row.min }}</template>
-          </el-table-column>
-        </el-table>
-
-        <div style="margin-top: 20px">
-          <el-button @click="toggleSelection()">Cancel</el-button>
-        </div>
-      </div>
-
-      <el-col :span="24">
-        <el-button :disabled="!client.connected" type="success" size="small" class="publish-btn" @click="doPublish">
-          Publish
-        </el-button>
-      </el-col>
     </el-card>
 
-    <el-card shadow="always" style="margin-bottom:30px;">
+    <el-card class="message-card" style="margin-bottom:30px;">
       <div class="emq-title">
-        Receive
+        <span>Received Messages</span>
       </div>
-
-      
-      <!-- 折线图容器 -->
-      <div ref="chart" style="width: 600px; height: 400px"></div>
-
-      <el-col :span="24">
-        <el-input type="textarea" :rows="5" style="margin-bottom: 15px" v-model="receiveNews" readOnly></el-input>
-      </el-col>
-
+      <div style="max-height: 400px; overflow-y: scroll;">
+        <el-timeline>
+          <el-timeline-item
+              v-for="(msg, index) in receivedMessages"
+              :key="index"
+              :timestamp="msg.timestamp"
+              placement="top">
+            <el-card style="margin-bottom: 20px;">
+              <div class="text-item">
+                <div><strong>Topic:</strong> {{ msg.topic }}</div>
+                <div><strong>QoS:</strong> {{ msg.qos }}</div>
+                <div><strong>Message:</strong> {{ msg.payload }}</div>
+              </div>
+            </el-card>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
     </el-card>
+
+<!--    <el-card shadow="always" style="margin-bottom:30px;">-->
+<!--      <div class="emq-title">-->
+<!--        Publish-->
+<!--      </div>-->
+<!--      <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publish">-->
+<!--        <el-row :gutter="20">-->
+<!--          <el-col :span="8">-->
+<!--            <div class="custom-select-wrapper">-->
+<!--              <el-form-item prop="topic" label="Topic">-->
+<!--                <el-select v-model="publish.topic" placeholder="请选择">-->
+<!--                  <el-option-->
+<!--                    v-for="item in topicOptions"-->
+<!--                    :key="item.value"-->
+<!--                    :label="item.label"-->
+<!--                    :value="item.value">-->
+<!--                  </el-option>-->
+<!--                </el-select>-->
+<!--              </el-form-item>-->
+<!--            </div>-->
+<!--          </el-col>-->
+<!--          <el-col :span="8">-->
+<!--            <el-form-item prop="qos" label="QoS">-->
+<!--              <el-select v-model="publish.qos">-->
+<!--                <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>-->
+<!--              </el-select>-->
+<!--            </el-form-item>-->
+<!--          </el-col>-->
+<!--          -->
+<!--          <el-col :span="24">-->
+<!--            <el-form-item prop="file">-->
+<!--              <el-upload-->
+<!--                class="upload-demo"-->
+<!--                :show-file-list="false"-->
+<!--                :on-change="uploadFile"-->
+<!--              >-->
+<!--                <el-button-->
+<!--                  size="small"-->
+<!--                  type="primary"-->
+<!--                  class="conn-btn"-->
+<!--                  :style="{ borderColor: '#409EFF', backgroundColor: '#409EFF', fontSize: '14px' }"-->
+<!--                >-->
+<!--                  Upload-->
+<!--                </el-button>-->
+<!--              </el-upload>-->
+<!--            </el-form-item>-->
+<!--          </el-col>-->
+
+<!--        </el-row>-->
+<!--        &lt;!&ndash;-->
+<!--        <el-col :span="8">-->
+<!--          <el-form-item prop="payload" label="Payload">-->
+<!--            <el-input v-model="publish.payload"></el-input>-->
+<!--          </el-form-item>-->
+<!--        </el-col>-->
+<!--        &ndash;&gt;-->
+<!--      </el-form>-->
+<!--      <div>-->
+<!--        <el-table-->
+<!--          ref="multipleTable"-->
+<!--          :data="tableData"-->
+<!--          tooltip-effect="dark"-->
+<!--          style="width: 100%"-->
+<!--          max-height="250"-->
+<!--          @selection-change="handleSelectionChange"-->
+<!--        >-->
+<!--           &lt;!&ndash; 勾选列配置 &ndash;&gt;-->
+<!--          <el-table-column type="selection" width="55"></el-table-column>-->
+
+<!--          &lt;!&ndash; 表格列配置 &ndash;&gt;-->
+<!--          <el-table-column label="Date" width="180">-->
+<!--            <template slot-scope="scope">{{ scope.row.date }}</template>-->
+<!--          </el-table-column>-->
+
+<!--          <el-table-column label="Average" width="180">-->
+<!--            <template slot-scope="scope">{{ scope.row.avg }}</template>-->
+<!--          </el-table-column>-->
+
+<!--          <el-table-column label="Maximum" width="180">-->
+<!--            <template slot-scope="scope">{{ scope.row.max }}</template>-->
+<!--          </el-table-column>-->
+
+<!--          <el-table-column label="Minimum" width="180">-->
+<!--            <template slot-scope="scope">{{ scope.row.min }}</template>-->
+<!--          </el-table-column>-->
+<!--        </el-table>-->
+
+<!--        <div style="margin-top: 20px">-->
+<!--          <el-button @click="toggleSelection()">Cancel</el-button>-->
+<!--        </div>-->
+<!--      </div>-->
+
+<!--      <el-col :span="24">-->
+<!--        <el-button :disabled="!client.connected" type="success" size="small" class="publish-btn" @click="doPublish">-->
+<!--          Publish-->
+<!--        </el-button>-->
+<!--      </el-col>-->
+<!--    </el-card>-->
   </div>
 </template>
 
@@ -262,25 +301,25 @@ export default {
             .toString(16)
             .substring(2, 8),
         // auth
-        username: 'admin',
-        password: '127339',
-        connectTimeout: 30 * 1000, // ms
+        username: 'zwc',
+        password: '2151414',
+        connectTimeout: 300 * 1000, // ms
         reconnectPeriod: 4000, // ms
       },
       subscription: {
         topic: '',
         qos: 0,
       },
-      publish: {
-        topic: '',
-        qos: 0,
-        payload: '{ "msg": "Hello, this is a test message." }',
+      publishData: {
+        publishTopic: '',
+        publishMessage: '',
+        qos: 0
       },
       qosList: [0, 1, 2],
       topicOptions: [
-        { value: 'topic/humidity', label: 'humidity' },
-        { value: 'topic/pressure', label: 'pressure' },
-        { value: 'topic/temperature', label: 'temperature' },
+        { value: 'humidity', label: 'humidity' },
+        { value: 'pressure', label: 'pressure' },
+        { value: 'temperature', label: 'temperature' },
       ],
       client: {
         connected: false,
@@ -293,13 +332,190 @@ export default {
       tableData:null,
       multipleSelection:null,
       chart: null,
-      receiveNews: '',
+      receivedMessages: [],
     }
   },
   mounted() {
     this.chart = echarts.init(this.$refs.chart);
+    this.setupMessageListener();
   },
   methods: {
+    createConnection() {
+      // 构建连接URL
+      const url = `${this.connection.protocol}://${this.connection.host}:${this.connection.port}`;
+
+      // 构建连接选项
+      const options = {
+        clientId: this.connection.clientId,
+        keepalive: this.connection.keepAlive,
+        clean: this.connection.cleanSession,
+        reconnectPeriod: this.connection.reconnectPeriod, // 重连周期设置为1秒
+        connectTimeout: this.connection.connectTimeout, // 连接超时时间设置为30秒
+        username: this.connection.username,
+        password: this.connection.password,
+        // 如果使用TLS/SSL，可能需要额外的配置选项
+      };
+
+      // 使用MQTT.js的connect方法创建MQTT客户端实例
+      this.client = mqtt.connect(url, options);
+
+      // 监听连接事件
+      this.client.on('connect', () => {
+        console.log('Connected successfully!')
+        Notification({
+          title: 'Success',
+          message: 'Connected to MQTT Broker!',
+          type: 'success',
+          duration: 5000 // 显示时长(毫秒)
+        });
+        this.connecting = false;
+        // 连接成功后的其他操作...
+      });
+
+      // 监听连接错误事件
+      this.client.on('error', (error) => {
+        Notification({
+          title: 'Error',
+          message: `Connection error: ${error.message}`,
+          type: 'error',
+          duration: 5000 // 显示时长(毫秒)
+        });
+        this.connecting = false; // 更新连接状态
+        // 连接失败的其他操作...
+      });
+
+      // 监听连接结束事件
+      this.client.on('close', () => {
+        if (this.client && !this.client.connected) {
+          Notification.error({
+            title: 'Connection Closed',
+            message: 'MQTT connection was closed.',
+            duration: 5000
+          });
+        }
+        this.connecting = false; // 更新连接状态
+      });
+    },
+    doSubscribe() {
+      const { topic, qos } = this.subscription;
+
+      // Ensure that topic is not empty or whitespace
+      if (!topic.trim()) {
+        Notification.error({
+          title: 'Subscription Error',
+          message: 'Topic cannot be empty.',
+          duration: 5000
+        });
+        return;
+      }
+
+      this.client.subscribe(topic, { qos }, (error, res) => {
+        if (error) {
+          Notification.error({
+            title: 'Subscription Failure',
+            message: `MQTT subscription failed: ${error.message}`,
+            duration: 5000
+          });
+        } else {
+          // res is an array of granted subscriptions, which can be useful for debugging
+          console.log('Subscription granted:', res);
+          this.subscribeSuccess = true;
+          Notification.success({
+            title: 'Subscription Success',
+            message: `Subscribed to "${topic}" with QoS ${qos}.`,
+            duration: 5000
+          });
+        }
+      });
+    },
+    // 调用这个方法来设置消息监听器
+    setupMessageListener() {
+      this.client.on('message', (topic, message) => {
+        // 将接收到的消息转换为字符串
+        const payload = message.toString();
+        // 将新消息添加到已接收消息的数组中
+        this.receivedMessages.push({ topic, payload });
+
+        // 可以在这里进行进一步处理，例如更新UI、触发状态变更等
+      });
+    },
+    doUnSubscribe() {
+      const topic = this.subscription.topic; // 确保你有一个变量来存储当前订阅的主题
+
+      // 确保主题不是空字符串
+      if (!topic.trim()) {
+        Notification.error({
+          title: 'Unsubscribe Error',
+          message: 'Topic cannot be empty.',
+          duration: 5000
+        });
+        return;
+      }
+
+      this.client.unsubscribe(topic, (error) => {
+        if (error) {
+          // 如果取消订阅失败，显示错误通知
+          Notification.error({
+            title: 'Unsubscribe Error',
+            message: `Failed to unsubscribe from topic: ${error.message}`,
+            duration: 5000
+          });
+        } else {
+          // 如果取消订阅成功，显示成功通知
+          Notification.success({
+            title: 'Unsubscribe Success',
+            message: `Unsubscribed from "${topic}" successfully.`,
+            duration: 5000
+          });
+        }
+      });
+    },
+    doPublish() {
+      const { publishTopic, publishMessage, qos } = this.publishData;
+
+      // 确保发布主题和消息不为空
+      if (!publishTopic.trim() || !publishMessage.trim()) {
+        this.$notify.error({
+          title: 'Publish Error',
+          message: 'Both topic and message must be provided.',
+          duration: 5000
+        });
+        return;
+      }
+
+      this.client.publish(publishTopic, publishMessage, { qos }, (error) => {
+        if (error) {
+          this.$notify.error({
+            title: 'Publish Failure',
+            message: `Failed to publish message: ${error.message}`,
+            duration: 5000
+          });
+        } else {
+          this.$notify.success({
+            title: 'Publish Success',
+            message: `Message published to "${publishTopic}" successfully.`,
+            duration: 5000
+          });
+          // Optionally clear the message input after successful publish
+          this.publishData.publishMessage = '';
+        }
+      });
+    },
+    destroyConnection() {
+      if (this.client.connected) {
+        try {
+          this.client.end(false, () => {
+            this.initData()
+            console.log('Successfully disconnected!')
+          })
+        } catch (error) {
+          console.log('Disconnect failed', error.toString())
+        }
+      }
+    },
+
+
+
     uploadFile(file) {
       if (this.isUploading) {
         // 如果正在上传，避免重复处理
@@ -594,145 +810,6 @@ export default {
       this.retryTimes = 0
       this.connecting = false
       this.subscribeSuccess = false
-    },
-    handleOnReConnect() {
-      this.retryTimes += 1
-      if (this.retryTimes > 5) {
-        try {
-          this.client.end()
-          this.initData()
-          this.$message.error('Connection maxReconnectTimes limit, stop retry')
-        } catch (error) { 
-          this.$message.error(error.toString())
-        }
-      }
-    },
-    createConnection() {
-        // 构建连接URL
-        const url = `${this.connection.protocol}://${this.connection.host}:${this.connection.port}`;
-
-        // 构建连接选项
-        const options = {
-          clientId: this.connection.clientId,
-          keepalive: this.connection.keepAlive,
-          clean: this.connection.cleanSession,
-          reconnectPeriod: this.connection.reconnectPeriod, // 重连周期设置为1秒
-          connectTimeout: this.connection.connectTimeout, // 连接超时时间设置为30秒
-          username: this.connection.username,
-          password: this.connection.password,
-          // 如果使用TLS/SSL，可能需要额外的配置选项
-        };
-
-        // 使用MQTT.js的connect方法创建MQTT客户端实例
-        this.client = mqtt.connect(url, options);
-
-        // 监听连接事件
-        this.client.on('connect', () => {
-          console.log('Connected successfully!')
-          Notification({
-            title: 'Success',
-            message: 'Connected to MQTT Broker!',
-            type: 'success',
-            duration: 5000 // 显示时长(毫秒)
-          });
-          this.connecting = false;
-          // 连接成功后的其他操作...
-        });
-
-        // 监听连接错误事件
-        this.client.on('error', (error) => {
-          Notification({
-            title: 'Error',
-            message: `Connection error: ${error.message}`,
-            type: 'error',
-            duration: 5000 // 显示时长(毫秒)
-          });
-          this.connecting = false; // 更新连接状态
-          // 连接失败的其他操作...
-        });
-
-      // 监听连接结束事件
-      this.client.on('close', () => {
-        if (this.client && !this.client.connected) {
-          Notification.error({
-            title: 'Connection Closed',
-            message: 'MQTT connection was closed.',
-            duration: 5000
-          });
-        }
-        this.connecting = false; // 更新连接状态
-      });
-    },
-    // subscribe topic
-    // https://github.com/mqttjs/MQTT.js#mqttclientsubscribetopictopic-arraytopic-object-options-callback
-    doSubscribe() {
-      const { topic, qos } = this.subscription;
-
-      // Ensure that topic is not empty or whitespace
-      if (!topic.trim()) {
-        Notification.error({
-          title: 'Subscription Error',
-          message: 'Topic cannot be empty.',
-          duration: 5000
-        });
-        return;
-      }
-
-      this.client.subscribe(topic, { qos }, (error, res) => {
-        if (error) {
-          Notification.error({
-            title: 'Subscription Failure',
-            message: `MQTT subscription failed: ${error.message}`,
-            duration: 5000
-          });
-        } else {
-          // res is an array of granted subscriptions, which can be useful for debugging
-          console.log('Subscription granted:', res);
-          this.subscribeSuccess = true;
-          Notification.success({
-            title: 'Subscription Success',
-            message: `Subscribed to "${topic}" with QoS ${qos}.`,
-            duration: 5000
-          });
-        }
-      });
-    },
-    // unsubscribe topic
-    // https://github.com/mqttjs/MQTT.js#mqttclientunsubscribetopictopic-array-options-callback
-    doUnSubscribe() {
-      const { topic } = this.subscription
-      this.client.unsubscribe(topic, error => {
-        if (error) {
-          console.log('Unsubscribe error', error)
-        }
-      })
-    },
-    // publish message
-    // https://github.com/mqttjs/MQTT.js#mqttclientpublishtopic-message-options-callback
-    doPublish() {
-      const { topic, qos, payload } = this.publish
-      this.client.publish(topic, payload, { qos }, error => {
-        if (error) {
-          console.log('Publish error', error)
-        }
-      })
-    },
-    // disconnect
-    // https://github.com/mqttjs/MQTT.js#mqttclientendforce-options-callback
-    destroyConnection() {
-      if (this.client.connected) {
-        try {
-          this.client.end(false, () => {
-            this.initData()
-            console.log('Successfully disconnected!')
-          })
-        } catch (error) {
-          console.log('Disconnect failed', error.toString())
-        }
-      }
-    },
-    handleProtocolChange(value) {
-      //this.connection.port = value === 'wss' ? '8084' : '8083'
     },
   },
 }
