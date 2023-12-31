@@ -337,7 +337,6 @@ export default {
   },
   mounted() {
     this.chart = echarts.init(this.$refs.chart);
-    this.setupMessageListener();
   },
   methods: {
     createConnection() {
@@ -370,6 +369,7 @@ export default {
         });
         this.connecting = false;
         // 连接成功后的其他操作...
+        this.setupMessageListener(); // 设置消息监听器
       });
 
       // 监听连接错误事件
@@ -433,6 +433,7 @@ export default {
       this.client.on('message', (topic, message) => {
         // 将接收到的消息转换为字符串
         const payload = message.toString();
+        console.log('收到'+message.toString());
         // 将新消息添加到已接收消息的数组中
         this.receivedMessages.push({ topic, payload });
 
@@ -497,7 +498,7 @@ export default {
             duration: 5000
           });
           // Optionally clear the message input after successful publish
-          this.publishData.publishMessage = '';
+
         }
       });
     },
