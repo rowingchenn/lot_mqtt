@@ -131,10 +131,30 @@
       <div class="emq-title">
         <span>Publish Message</span>
       </div>
-      <el-form @submit.prevent="doPublish">
-        <el-form-item label="Topic">
-          <el-input v-model="publishData.publishTopic" placeholder="Enter topic to publish to"></el-input>
-        </el-form-item>
+      <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publishData">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <div class="custom-select-wrapper">
+              <el-form-item prop="topic" label="Topic">
+                <el-select v-model="publishData.publishTopic" placeholder="请选择">
+                  <el-option
+                      v-for="item in topicOptions"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </div>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item prop="qos" label="QoS">
+              <el-select v-model="publishData.qos">
+                <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
         <el-form-item label="Message">
           <el-input
               type="textarea"
@@ -142,19 +162,13 @@
               placeholder="Enter message to publish">
           </el-input>
         </el-form-item>
-        <el-form-item label="QoS">
-          <el-select v-model="publishData.qos" placeholder="Select QoS">
-            <el-option label="0 - At most once" :value="0"></el-option>
-            <el-option label="1 - At least once" :value="1"></el-option>
-            <el-option label="2 - Exactly once" :value="2"></el-option>
-          </el-select>
-        </el-form-item>
         <el-form-item>
-          <el-button type="primary" native-type="submit">Publish</el-button>
+          <el-button type="button" @click="doPublish">Publish</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
+    <!-- 接收消息的卡片 -->
     <el-card class="message-card" style="margin-bottom:30px;">
       <div class="emq-title">
         <span>Received Messages</span>
@@ -468,6 +482,9 @@ export default {
             message: `Unsubscribed from "${topic}" successfully.`,
             duration: 5000
           });
+          this.subscription.topic = ''; // 清空订阅主题
+          this.subscription.qos = 0; // 重置QoS
+          this.subscribeSuccess = false; // 更新订阅状态
         }
       });
     },
@@ -475,10 +492,19 @@ export default {
       const { publishTopic, publishMessage, qos } = this.publishData;
 
       // 确保发布主题和消息不为空
-      if (!publishTopic.trim() || !publishMessage.trim()) {
-        this.$notify.error({
+      if (!publishTopic.trim()) {
+        Notification.error({
           title: 'Publish Error',
-          message: 'Both topic and message must be provided.',
+          message: 'Topic must be provided.',
+          duration: 5000
+        });
+        return;
+      }
+
+      if (!publishMessage.trim()) {
+        Notification.error({
+          title: 'Publish Error',
+          message: 'Message must be provided.',
           duration: 5000
         });
         return;
@@ -486,13 +512,13 @@ export default {
 
       this.client.publish(publishTopic, publishMessage, { qos }, (error) => {
         if (error) {
-          this.$notify.error({
+          Notification.error({
             title: 'Publish Failure',
             message: `Failed to publish message: ${error.message}`,
             duration: 5000
           });
         } else {
-          this.$notify.success({
+          Notification.success({
             title: 'Publish Success',
             message: `Message published to "${publishTopic}" successfully.`,
             duration: 5000
