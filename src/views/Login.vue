@@ -19,7 +19,7 @@
       -->
       <el-form-item prop="username">
         <el-input
-          v-model="connection.username"
+          v-model="loginForm.username"
           type="text"
           auto-complete="off"
           placeholder="账号"
@@ -33,7 +33,7 @@
       </el-form-item>
       <el-form-item prop="password">
         <el-input
-          v-model="connection.password"
+          v-model="loginForm.password"
           type="password"
           auto-complete="off"
           placeholder="密码"
@@ -65,7 +65,6 @@
 <script>
   import mqtt from 'mqtt'
   import { Notification } from 'element-ui';
-  import { mapActions, mapGetters } from 'vuex';
 
   export default {
     name: 'YourComponent',
@@ -84,7 +83,7 @@
               .substring(2, 8),
           // auth
           username: 'admin',
-          password: '127339',
+          password: '123456',
           connectTimeout: 300 * 1000, // ms
           reconnectPeriod: 4000, // ms
         },
@@ -118,8 +117,8 @@
         codeUrl: "",
         loginForm: {
           option:"",//用于控制跳转的选项
-          username: "",
-          password: "",
+          username: "admin",
+          password: "123456",
           rememberMe: false,
           code: "",
           uuid: "",
@@ -141,13 +140,7 @@
         redirect: undefined,
       };
     },
-    computed: {
-      // 使用 mapGetters 将 getClient 映射到组件的 computed 中
-      ...mapGetters(['getClient']),
-    },
     methods: { 
-      ...mapActions(['setClient']),
-
       handleLogin(){
         // 模拟登录逻辑，可以使用假数据或者硬编码
         console.log('我在写伪登录...');
@@ -160,25 +153,31 @@
         localStorage.setItem('user', JSON.stringify(fakeLoginData));
 
         let Direction;
-        switch(this.connection.username){
+        console.log(this.loginForm.username);
+        console.log(this.loginForm.password);
+        switch(this.loginForm.username){
           case 'admin':
-            Direction='home';
+            if(this.loginForm.password === '123456')
+              Direction='home';
             break;
           case 'processing':
-            Direction='processing';
+            if(this.loginForm.password === '123456')
+              Direction='processing';
             break;
           case 'visualization':
-            Direction='visualization';
+            if(this.loginForm.password === '123456')
+              Direction='visualization';
             break;
           case 'source':
-            Direction='source';
+            if(this.loginForm.password === '123456')
+              Direction='source';
             break;
         }
         // 使用 $router 对象进行编程式导航到主页面
         //this.$router.push('/'+this.loginForm.option);
 
         //在这里连接MQTT
-        this.createConnection();
+        //this.createConnection();
         //连接上了之后跳转对应的界面
 
         this.$router.push('/'+ Direction);
@@ -217,7 +216,6 @@
           this.connecting = false;
           // 连接成功后的其他操作...
           this.setupMessageListener(); // 设置消息监听器
-          this.setClient(this.client); // 将客户端实例保存到 Vuex store
         });
 
         /*

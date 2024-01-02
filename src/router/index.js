@@ -1,7 +1,7 @@
 //import App from '../App';
 import Vue from 'vue'
 import VueRouter from "vue-router";
-import store from '../store';
+//import store from '../store';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Source from '../views/Source.vue';
@@ -17,8 +17,9 @@ const router = new VueRouter({
     {path:'/source',component:Source},
     {path:'/visualization',component:Visualization},
   ]
-})
+});
 
+/*
 router.beforeEach((to, from, next) => {
   // 在全局前置守卫中执行断开连接的逻辑
   console.log(store.getters.getClient);
@@ -29,6 +30,6 @@ router.beforeEach((to, from, next) => {
   } else {
     next(); // 如果没有 client，直接继续导航
   }
-});
+});*/
 
 export default router

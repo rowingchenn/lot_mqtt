@@ -5,6 +5,76 @@
       <h1>数据发布端</h1>
       <el-card shadow="always" style="margin-bottom:30px;">
         <div class="emq-title">
+          Configuration
+        </div>
+        <el-form ref="configForm" hide-required-asterisk size="small" label-position="top" :model="connection">
+          <el-row :gutter="20">
+
+            <el-col :span="8">
+              <el-form-item prop="host" label="Host">
+                <el-input v-model="connection.host" placeholder="100.81.86.127"></el-input>
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="8">
+              <el-form-item prop="port" label="Port">
+                <el-input v-model.number="connection.port" type="number" placeholder="8083/8084"></el-input>
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="8">
+              <el-form-item prop="clientId" label="Client ID">
+                <el-input v-model="connection.clientId"> </el-input>
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="8">
+              <el-form-item prop="username" label="Username">
+                <el-input v-model="connection.username"></el-input>
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="8">
+              <el-form-item prop="password" label="Password">
+                <el-input v-model="connection.password"></el-input>
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="8">
+              <el-form-item prop="keepAlive" label="Keep Alive">
+                <el-input v-model.number="connection.keepAlive" type="number" placeholder="Keep Alive interval"></el-input>
+              </el-form-item>
+            </el-col>
+
+            <el-col :span="8">
+              <el-form-item prop="cleanSession" label="Clean Session">
+                <el-switch v-model="connection.cleanSession"></el-switch>
+              </el-form-item>
+            </el-col>
+
+
+            <el-col :span="24">
+              <el-button
+                type="success"
+                size="small"
+                class="conn-btn"
+                style="margin-right: 20px;"
+                :disabled="client.connected"
+                @click="createConnection"
+                :loading="connecting"
+              >
+                {{ client.connected ? 'Connected' : 'Connect' }}
+              </el-button>
+
+              <el-button v-if="client.connected" type="danger" size="small" class="conn-btn" @click="destroyConnection">
+                Disconnect
+              </el-button>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-card>
+      <el-card shadow="always" style="margin-bottom:30px;">
+        <div class="emq-title">
           Publish
         </div>
         <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publish">
@@ -151,7 +221,7 @@
     mounted() {
       this.chart = echarts.init(this.$refs.chart);
     },
-    methods: {
+    methods: { 
       uploadFile(file) {
         if (this.isUploading) {
           // 如果正在上传，避免重复处理
@@ -596,17 +666,9 @@
         }
       },
       handleProtocolChange(value) {
-        //this.connection.port = value === 'wss' ? '8084' : '8083'
+        this.connection.port = value === 'wss' ? '8084' : '8083'
       },
     },
-
-
-
-
-
-
-
-
   }
 
 
@@ -616,6 +678,7 @@
 
 <style lang="scss">
   @import url('../assets/style/home.scss');
+  
   .fullscreen-background {
     background-image: url('../../public/images/login_background.jpeg');
     background-size: cover;
