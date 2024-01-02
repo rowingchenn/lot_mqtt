@@ -1,5 +1,6 @@
 <template>
   <div class="home-container">
+    <router-link to="/">返回登录页面</router-link>
     <!-- 连接broker的卡片 -->
     <el-card shadow="always" style="margin-bottom:30px;">
       <div class="emq-title">

@@ -10,7 +10,7 @@ import Subscribe from '../views/Subscribe.vue';
 Vue.use(VueRouter)
 const router = new VueRouter({
   routes:[
-    {path:'/login',component:Login},
+    {path:'/',component:Login},
     {path:'/home',component:Home},
     {path:'/publish',component:Publish},
     {path:'/process',component:Process},

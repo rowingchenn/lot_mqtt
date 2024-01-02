@@ -8,8 +8,6 @@ import 'element-ui/lib/theme-chalk/index.css'
 Vue.config.productionTip = false
 Vue.use(ElementUI)
 
-// 定义全局变量
-Vue.prototype.isAuthenticated = false;
 /*
 router.beforeEach((to, from, next) => {
   if(to.path === '/home' && !Vue.prototype.isAuthenticated){

@@ -7,6 +7,7 @@
       class="login-form"
     >
       <h3 class="title">欢迎登录xx天气预测平台</h3>
+      <!--
       <el-form-item prop="option">
         <el-select v-model="loginForm.option" placeholder="请选择你希望的功能">
           <el-option label="demo" value="home" />
@@ -15,6 +16,7 @@
           <el-option label="数据订阅" value="subscribe" />
         </el-select>
       </el-form-item>
+      -->
       <el-form-item prop="username">
         <el-input
           v-model="loginForm.username"
@@ -103,14 +105,38 @@
       // 假设登录成功后，将用户信息保存到本地存储或 Vuex 状态管理中
       localStorage.setItem('user', JSON.stringify(fakeLoginData));
 
+      let Direction;
+      switch(this.loginForm.username){
+        case 'zwc':
+          Direction='home';
+          break;
+        case 'zwy':
+          Direction='publish';
+          break;
+        case 'lc':
+          Direction='process';
+          break;
+        case 'ly':
+          Direction='subscribe';
+          break;
+        case 'tyx':
+          Direction='';
+          break;
+      }
       // 使用 $router 对象进行编程式导航到主页面
-      this.$router.push('/'+this.loginForm.option);
+      //this.$router.push('/'+this.loginForm.option);
+
+      //在这里连接MQTT
+      //脸上了之后跳转对应的界面
+
+      this.$router.push('/'+Direction);
       },
   },
   };
 </script>
   
-<style scoped>.fullscreen-background {
+<style scoped>
+.fullscreen-background {
   background-image: url('../../public/images/login_background.jpeg');
   background-size: cover;
   background-position: center;
@@ -137,6 +163,7 @@
   transform: translate(-50%, -50%);
   box-sizing: border-box;
   padding: 25px 25px 5px 25px;
+  
 
   .el-input {
     height: 38px;
