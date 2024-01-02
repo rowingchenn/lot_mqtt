@@ -72,6 +72,60 @@
           </el-row>
         </el-form>
       </el-card>
+  
+      <!-- 订阅topic的卡片 -->
+      <el-card shadow="always" style="margin-bottom:30px;">
+        <div class="emq-title">
+          Subscribe
+        </div>
+        <el-form ref="subscription" hide-required-asterisk size="small" label-position="top" :model="subscription">
+          <el-row :gutter="20">
+            <el-col :span="8">
+              <div class="custom-select-wrapper">
+                <el-form-item prop="topic" label="Topic">
+                  <el-select v-model="subscription.topic" placeholder="请选择">
+                    <el-option
+                      v-for="item in topicOptions"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                    </el-option>
+                  </el-select>
+                </el-form-item>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <el-form-item prop="qos" label="QoS">
+                <el-select v-model="subscription.qos">
+                  <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
+              <el-button
+                :disabled="!client.connected"
+                type="success"
+                size="small"
+                class="subscribe-btn"
+                @click="doSubscribe"
+              >
+                {{ subscribeSuccess ? 'Subscribed' : 'Subscribe' }}
+              </el-button>
+              <el-button
+                :disabled="!client.connected"
+                type="success"
+                size="small"
+                class="subscribe-btn"
+                style="margin-left:20px"
+                @click="doUnSubscribe"
+                v-if="subscribeSuccess"
+              >
+                Unsubscribe
+              </el-button>
+            </el-col>
+          </el-row>
+        </el-form>
+      </el-card>
       
       <el-card shadow="always" style="margin-bottom:30px;">
         <div class="emq-title">
@@ -119,8 +173,8 @@
         </el-form>
         <div>
           <!--猫-->
-          <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" max-height="400"
-            @selection-change="handleSelectionChange">
+          <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" 
+            max-height="400" :row-class-name="rowClassName">
             <!-- 勾选列配置 -->
             <!--
             <el-table-column type="selection" width="55"></el-table-column>
@@ -157,6 +211,31 @@
           </el-button>
         </el-col>
       </el-card>
+  
+       <!-- 接收消息的卡片 -->
+       <el-card class="message-card" style="margin-bottom:30px;">
+        <div class="emq-title">
+          <span>Received Messages</span>
+        </div>
+        <div style="max-height: 400px; overflow-y: scroll;">
+          <el-timeline>
+            <el-timeline-item
+                v-for="(msg, index) in receivedMessages"
+                :key="index"
+                :timestamp="msg.timestamp"
+                placement="top">
+              <el-card style="margin-bottom: 20px;">
+                <div class="text-item">
+                  <div><strong>Topic:</strong> {{ msg.topic }}</div>
+                  <div><strong>QoS:</strong> {{ msg.qos }}</div>
+                  <div><strong>Message:</strong> {{ msg.payload }}</div>
+                </div>
+              </el-card>
+            </el-timeline-item>
+          </el-timeline>
+        </div>
+      </el-card>
+  
     </div>
   </template>
   
@@ -200,9 +279,9 @@
           },
           qosList: [0, 1, 2],
           topicOptions: [
-            { value: 'topic/humidity', label: 'humidity' },
-            { value: 'topic/pressure', label: 'pressure' },
-            { value: 'topic/temperature', label: 'temperature' },
+            { value: 'humidity', label: 'humidity' },
+            { value: 'pressure', label: 'pressure' },
+            { value: 'temperature', label: 'temperature' },
           ],
           client: {
             connected: false,
@@ -247,8 +326,10 @@
                 // 使用 parseJsonData 方法生成表格数据
                 //this.tableData = this.parseJsonData(JSON.parse(this.fileContent));
                 this.tableData = this.processMultipleDaysData(this.fileContent);
+  
                 console.log(this.tableData)
                 // 设置 publish 对象的 payload 属性
+                this.publish.payload=this.tableData
                 //this.$set(this.publish, 'payload', this.fileContent);
               }
   
@@ -638,16 +719,16 @@
           });*/
   
           // 监听连接结束事件
-          this.client.on('close', () => {
-            if (this.client && !this.client.connected) {
-              Notification.error({
-                title: 'Connection Closed',
-                message: 'MQTT connection was closed.',
-                duration: 5000
-              });
-            }
-            this.connecting = false; // 更新连接状态
-          });
+          // this.client.on('close', () => {
+          //   if (this.client && !this.client.connected) {
+          //     Notification.error({
+          //       title: 'Connection Closed',
+          //       message: 'MQTT connection was closed.',
+          //       duration: 5000
+          //     });
+          //   }
+          //   this.connecting = false; // 更新连接状态
+          // });
         },
         // subscribe topic
         // https://github.com/mqttjs/MQTT.js#mqttclientsubscribetopictopic-arraytopic-object-options-callback
@@ -677,30 +758,73 @@
         //<!--猫-->
         doPublish() {
           this.prepareData();
+          // 确保发布主题和消息不为空
+          if (!publishTopic.trim()) {
+            Notification.error({
+              title: 'Publish Error',
+              message: 'Topic must be provided.',
+              duration: 5000
+            });
+            return;
+          }
+  
+          if (!publishMessage.trim()) {
+            Notification.error({
+              title: 'Publish Error',
+              message: 'Message must be provided.',
+              duration: 5000
+            });
+            return;
+          }
+  
+          this.client.publish(publishTopic, publishMessage, { qos }, (error) => {
+            if (error) {
+              Notification.error({
+                title: 'Publish Failure',
+                message: `Failed to publish message: ${error.message}`,
+                duration: 5000
+              });
+            } else {
+              Notification.success({
+                title: 'Publish Success',
+                message: `Message published to "${publishTopic}" successfully.`,
+                duration: 5000
+              });
+              // Optionally clear the message input after successful publish
+  
+            }
+          });
           const { topic, qos, payload } = this.publish
           this.client.publish(topic, payload, { qos }, error => {
             if (error) {
-              console.log('Publish error', error)
+              console.log('发送失败');
+              console.log('Publish error', error);
             }
-            else
-              console.log('我还在呢')
           })
         },
         prepareData(){
-          this.publish = ''; // Initialize the publish string
+          /*
           if(this.publishState === 0){
+            let result;
+            result += '{';
             for (let i = 0; i < Math.min(30, this.tableData.length); i++) {
               const rawData = this.tableData[i].rawData;
-              this.publish += rawData + '\n';
+              if(i<Math.min(30, this.tableData.length)-1)
+                result += rawData + ',';
+              else
+              result += rawData + '}';
             }
-            this.publishState = 29;
+            
+            this.$set(this.publish, 'payload', result);
+            this.publishState = 30;
           }
           else{
-            this.publish = this.tableData[this.publishState].rawData;
+            this.$set(this.publish, 'payload', this.tableData[this.publishState].rawData);
             this.publishState++;
-          }
-  
-          console.log(this.publish);
+          }*/
+          this.$set(this.publish, 'payload', this.tableData[this.publishState].rawData);
+          this.publishState++;
+          console.log(this.publish.payload);
         },
         // disconnect
         // https://github.com/mqttjs/MQTT.js#mqttclientendforce-options-callback
