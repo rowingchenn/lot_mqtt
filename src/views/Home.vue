@@ -305,8 +305,8 @@ export default {
     return {
       connection: {
         protocol: 'ws',
-        host:'100.81.86.127',
-        port: 9001,
+        host:'118.25.137.127',
+        port: 8083,
         cleanSession: true,
         keepAlive: 60, // 默认keep alive值
         clientId:
@@ -315,8 +315,8 @@ export default {
             .toString(16)
             .substring(2, 8),
         // auth
-        username: 'zwc',
-        password: '2151414',
+        username: '',
+        password: '',
         connectTimeout: 300 * 1000, // ms
         reconnectPeriod: 4000, // ms
       },
@@ -366,6 +366,7 @@ export default {
         connectTimeout: this.connection.connectTimeout, // 连接超时时间设置为30秒
         username: this.connection.username,
         password: this.connection.password,
+        path: '/mqtt'
         // 如果使用TLS/SSL，可能需要额外的配置选项
       };
 
