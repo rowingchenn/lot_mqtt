@@ -1,185 +1,262 @@
 <template>
-  <div class="fullscreen-background">
-    <div class="home-container">
-      <router-link to="/">返回登录页面</router-link>
-      <h1>数据发布端</h1>
-      <el-card shadow="always" style="margin-bottom:30px;">
-        <div class="emq-title">
-          Configuration
-        </div>
-        <el-form ref="configForm" hide-required-asterisk size="small" label-position="top" :model="connection">
-          <el-row :gutter="20">
+  <div class="home-container">
+    <router-link to="/">返回登录页面</router-link>
+    <h1>数据发布端</h1>
+    <el-card shadow="always" style="margin-bottom:30px;">
+      <div class="emq-title">
+        Configuration
+      </div>
+      <el-form ref="configForm" hide-required-asterisk size="small" label-position="top" :model="connection">
+        <el-row :gutter="20">
 
-            <el-col :span="8">
-              <el-form-item prop="host" label="Host">
-                <el-input v-model="connection.host" placeholder="100.81.86.127"></el-input>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="8">
-              <el-form-item prop="port" label="Port">
-                <el-input v-model.number="connection.port" type="number" placeholder="8083/8084"></el-input>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="8">
-              <el-form-item prop="clientId" label="Client ID">
-                <el-input v-model="connection.clientId"> </el-input>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="8">
-              <el-form-item prop="username" label="Username">
-                <el-input v-model="connection.username"></el-input>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="8">
-              <el-form-item prop="password" label="Password">
-                <el-input v-model="connection.password"></el-input>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="8">
-              <el-form-item prop="keepAlive" label="Keep Alive">
-                <el-input v-model.number="connection.keepAlive" type="number" placeholder="Keep Alive interval"></el-input>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="8">
-              <el-form-item prop="cleanSession" label="Clean Session">
-                <el-switch v-model="connection.cleanSession"></el-switch>
-              </el-form-item>
-            </el-col>
-
-
-            <el-col :span="24">
-              <el-button
-                type="success"
-                size="small"
-                class="conn-btn"
-                style="margin-right: 20px;"
-                :disabled="client.connected"
-                @click="createConnection"
-                :loading="connecting"
-              >
-                {{ client.connected ? 'Connected' : 'Connect' }}
-              </el-button>
-
-              <el-button v-if="client.connected" type="danger" size="small" class="conn-btn" @click="destroyConnection">
-                Disconnect
-              </el-button>
-            </el-col>
-          </el-row>
-        </el-form>
-      </el-card>
-      <el-card shadow="always" style="margin-bottom:30px;">
-        <div class="emq-title">
-          Publish
-        </div>
-        <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publish">
-          <el-row :gutter="20">
-            <el-col :span="8">
-              <div class="custom-select-wrapper">
-                <el-form-item prop="topic" label="Topic">
-                  <el-select v-model="publish.topic" placeholder="请选择">
-                    <el-option v-for="item in topicOptions" :key="item.value" :label="item.label" :value="item.value">
-                    </el-option>
-                  </el-select>
-                </el-form-item>
-              </div>
-            </el-col>
-            <el-col :span="8">
-              <el-form-item prop="qos" label="QoS">
-                <el-select v-model="publish.qos">
-                  <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
-                </el-select>
-              </el-form-item>
-            </el-col>
-
-            <el-col :span="24">
-              <el-form-item prop="file">
-                <el-upload class="upload-demo" :show-file-list="false" :on-change="uploadFile">
-                  <el-button size="small" type="primary" class="conn-btn"
-                    :style="{ borderColor: '#409EFF', backgroundColor: '#409EFF', fontSize: '14px' }">
-                    Upload
-                  </el-button>
-                </el-upload>
-              </el-form-item>
-            </el-col>
-
-          </el-row>
-          <!--
           <el-col :span="8">
-            <el-form-item prop="payload" label="Payload">
-              <el-input v-model="publish.payload"></el-input>
+            <el-form-item prop="host" label="Host">
+              <el-input v-model="connection.host" placeholder="100.81.86.127"></el-input>
             </el-form-item>
           </el-col>
-          -->
-        </el-form>
-        <div>
-          <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark" style="width: 100%" max-height="250"
-            @selection-change="handleSelectionChange">
-            <!-- 勾选列配置 -->
-            <el-table-column type="selection" width="55"></el-table-column>
 
-            <!-- 表格列配置 -->
-            <el-table-column label="Date" width="180">
-              <template slot-scope="scope">{{ scope.row.date }}</template>
-            </el-table-column>
+          <el-col :span="8">
+            <el-form-item prop="port" label="Port">
+              <el-input v-model.number="connection.port" type="number" placeholder="8083/8084"></el-input>
+            </el-form-item>
+          </el-col>
 
-            <el-table-column label="Average" width="180">
-              <template slot-scope="scope">{{ scope.row.avg }}</template>
-            </el-table-column>
+          <el-col :span="8">
+            <el-form-item prop="clientId" label="Client ID">
+              <el-input v-model="connection.clientId"> </el-input>
+            </el-form-item>
+          </el-col>
 
-            <el-table-column label="Maximum" width="180">
-              <template slot-scope="scope">{{ scope.row.max }}</template>
-            </el-table-column>
+          <el-col :span="8">
+            <el-form-item prop="username" label="Username">
+              <el-input v-model="connection.username"></el-input>
+            </el-form-item>
+          </el-col>
 
-            <el-table-column label="Minimum" width="180">
-              <template slot-scope="scope">{{ scope.row.min }}</template>
-            </el-table-column>
-          </el-table>
+          <el-col :span="8">
+            <el-form-item prop="password" label="Password">
+              <el-input v-model="connection.password"></el-input>
+            </el-form-item>
+          </el-col>
 
-          <div style="margin-top: 20px">
-            <el-button @click="toggleSelection()">Cancel</el-button>
-          </div>
-        </div>
+          <el-col :span="8">
+            <el-form-item prop="keepAlive" label="Keep Alive">
+              <el-input v-model.number="connection.keepAlive" type="number" placeholder="Keep Alive interval"></el-input>
+            </el-form-item>
+          </el-col>
 
-        <el-col :span="24">
-          <el-button :disabled="!client.connected" type="success" size="small" class="publish-btn" @click="doPublish">
-            Publish
-          </el-button>
+          <el-col :span="8">
+            <el-form-item prop="cleanSession" label="Clean Session">
+              <el-switch v-model="connection.cleanSession"></el-switch>
+            </el-form-item>
+          </el-col>
+
+
+          <el-col :span="24">
+            <el-button
+              type="success"
+              size="small"
+              class="conn-btn"
+              style="margin-right: 20px;"
+              :disabled="client.connected"
+              @click="createConnection"
+              :loading="connecting"
+            >
+              {{ client.connected ? 'Connected' : 'Connect' }}
+            </el-button>
+
+            <el-button v-if="client.connected" type="danger" size="small" class="conn-btn" @click="destroyConnection">
+              Disconnect
+            </el-button>
+          </el-col>
+        </el-row>
+      </el-form>
+    </el-card>
+
+    <!-- 订阅topic的卡片 -->
+    <el-card shadow="always" style="margin-bottom:30px;">
+      <div class="emq-title">
+        Subscribe
+      </div>
+      <el-form ref="subscription" hide-required-asterisk size="small" label-position="top" :model="subscription">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <div class="custom-select-wrapper">
+              <el-form-item prop="topic" label="Topic">
+                <el-select v-model="subscription.topic" placeholder="请选择">
+                  <el-option
+                    v-for="item in topicOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </div>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item prop="qos" label="QoS">
+              <el-select v-model="subscription.qos">
+                <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-button
+              :disabled="!client.connected"
+              type="success"
+              size="small"
+              class="subscribe-btn"
+              @click="doSubscribe"
+            >
+              {{ subscribeSuccess ? 'Subscribed' : 'Subscribe' }}
+            </el-button>
+            <el-button
+              :disabled="!client.connected"
+              type="success"
+              size="small"
+              class="subscribe-btn"
+              style="margin-left:20px"
+              @click="doUnSubscribe"
+              v-if="subscribeSuccess"
+            >
+              Unsubscribe
+            </el-button>
+          </el-col>
+        </el-row>
+      </el-form>
+    </el-card>
+    
+    <el-card shadow="always" style="margin-bottom:30px;">
+      <div class="emq-title">
+        Publish
+      </div>
+      <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publish">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <div class="custom-select-wrapper">
+              <el-form-item prop="topic" label="Topic">
+                <el-select v-model="publish.topic" placeholder="请选择">
+                  <el-option v-for="item in topicOptions" :key="item.value" :label="item.label" :value="item.value">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </div>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item prop="qos" label="QoS">
+              <el-select v-model="publish.qos">
+                <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="24">
+            <el-form-item prop="file">
+              <el-upload class="upload-demo" :show-file-list="false" :on-change="uploadFile">
+                <el-button size="small" type="primary" class="conn-btn"
+                  :style="{ borderColor: '#409EFF', backgroundColor: '#409EFF', fontSize: '14px' }">
+                  Upload
+                </el-button>
+              </el-upload>
+            </el-form-item>
+          </el-col>
+
+        </el-row>
+        <!--
+        <el-col :span="8">
+          <el-form-item prop="payload" label="Payload">
+            <el-input v-model="publish.payload"></el-input>
+          </el-form-item>
         </el-col>
-      </el-card>
-    </div>
+        -->
+      </el-form>
+      <div>
+        <!--猫-->
+        <el-table :data="tableData" tooltip-effect="dark" style="width: 100%" 
+          max-height="400" :row-class-name="rowClassName">
+          <!-- 勾选列配置 -->
+          <!--
+          <el-table-column type="selection" width="55"></el-table-column>
+          -->
+
+          <!-- 表格列配置 -->
+          <el-table-column label="Date" width="180">
+            <template slot-scope="scope">{{ scope.row.date }}</template>
+          </el-table-column>
+
+          <el-table-column label="Average" width="180">
+            <template slot-scope="scope">{{ scope.row.avg }}</template>
+          </el-table-column>
+
+          <el-table-column label="Maximum" width="180">
+            <template slot-scope="scope">{{ scope.row.max }}</template>
+          </el-table-column>
+
+          <el-table-column label="Minimum" width="180">
+            <template slot-scope="scope">{{ scope.row.min }}</template>
+          </el-table-column>
+        </el-table>
+
+        <!--
+        <div style="margin-top: 20px">
+          <el-button @click="toggleSelection()">Cancel</el-button>
+        </div>
+        -->
+      </div>
+
+      <el-col :span="24">
+        <el-button :disabled="!client.connected" type="success" size="small" class="publish-btn" @click="doPublish">
+          Publish
+        </el-button>
+      </el-col>
+    </el-card>
+
+     <!-- 接收消息的卡片 -->
+     <el-card class="message-card" style="margin-bottom:30px;">
+      <div class="emq-title">
+        <span>Received Messages</span>
+      </div>
+      <div style="max-height: 400px; overflow-y: scroll;">
+        <el-timeline>
+          <el-timeline-item
+              v-for="(msg, index) in receivedMessages"
+              :key="index"
+              :timestamp="msg.timestamp"
+              placement="top">
+            <el-card style="margin-bottom: 20px;">
+              <div class="text-item">
+                <div><strong>Topic:</strong> {{ msg.topic }}</div>
+                <div><strong>QoS:</strong> {{ msg.qos }}</div>
+                <div><strong>Message:</strong> {{ msg.payload }}</div>
+              </div>
+            </el-card>
+          </el-timeline-item>
+        </el-timeline>
+      </div>
+    </el-card>
+
   </div>
-  
 </template>
 
 <script>
   /* eslint-disable */
   import mqtt from 'mqtt'
   import * as echarts from 'echarts';
+  import { Notification } from 'element-ui';
 
   export default {
     name: 'Home',
 
     data() {
       return {
+        publishState:0,
         connection: {
-          protocol: 'mqtt',
-          //protocol: 'ws',
-          //host: 'broker.emqx.io',
-          //host: '127.0.0.1',
-          host: '100.81.86.127',
-          // ws: 8083; wss: 8084
-          port: 1883,
-          endpoint: '/mqtt',
-          // for more options, please refer to https://github.com/mqttjs/MQTT.js#mqttclientstreambuilder-options
-          clean: true,
-          connectTimeout: 30 * 1000, // ms
-          reconnectPeriod: 4000, // ms
+          protocol: 'ws',
+          host:'118.25.137.127',
+          port: 8083,
+          cleanSession: true,
+          keepAlive: 60, // 默认keep alive值
           clientId:
             'emqx_vue_' +
             Math.random()
@@ -188,6 +265,8 @@
           // auth
           username: 'admin',
           password: '127339',
+          connectTimeout: 300 * 1000, // ms
+          reconnectPeriod: 4000, // ms
         },
         subscription: {
           topic: '',
@@ -200,9 +279,9 @@
         },
         qosList: [0, 1, 2],
         topicOptions: [
-          { value: 'topic/humidity', label: 'humidity' },
-          { value: 'topic/pressure', label: 'pressure' },
-          { value: 'topic/temperature', label: 'temperature' },
+          { value: 'humidity', label: 'humidity' },
+          { value: 'pressure', label: 'pressure' },
+          { value: 'temperature', label: 'temperature' },
         ],
         client: {
           connected: false,
@@ -248,7 +327,9 @@
               //this.tableData = this.parseJsonData(JSON.parse(this.fileContent));
               this.tableData = this.processMultipleDaysData(this.fileContent);
 
+              console.log(this.tableData)
               // 设置 publish 对象的 payload 属性
+              this.publish.payload=this.tableData
               //this.$set(this.publish, 'payload', this.fileContent);
             }
 
@@ -591,32 +672,63 @@
         }
       },
       createConnection() {
-        try {
-          this.connecting = true
-          const { protocol, host, port, endpoint, ...options } = this.connection
-          const connectUrl = `mqtt://100.81.86.127:1883`
-          //const connectUrl = `${protocol}://${host}:${port}${endpoint}`
-          this.client = mqtt.connect(connectUrl, options)
-          if (this.client.on) {
-            this.client.on('connect', () => {
-              this.connecting = false
-              console.log('Connection succeeded!')
-            })
-            this.client.on('reconnect', this.handleOnReConnect)
-            this.client.on('error', error => {
-              console.log('Connection failed', error)
-              console.log(connectUrl);
-            })
-            this.client.on('message', (topic, message) => {
-              this.receiveNews = this.receiveNews.concat(message)
-              //console.log(`Received message ${message} from topic ${topic}`)
-              this.generateLineChart()
-            })
-          }
-        } catch (error) {
-          this.connecting = false
-          console.log('mqtt.connect error', error)
-        }
+        // 构建连接URL
+        const url = `${this.connection.protocol}://${this.connection.host}:${this.connection.port}`;
+
+        // 构建连接选项
+        const options = {
+          clientId: this.connection.clientId,
+          keepalive: this.connection.keepAlive,
+          clean: this.connection.cleanSession,
+          reconnectPeriod: this.connection.reconnectPeriod, // 重连周期设置为1秒
+          connectTimeout: this.connection.connectTimeout, // 连接超时时间设置为30秒
+          username: this.connection.username,
+          password: this.connection.password,
+          path: '/mqtt'
+          // 如果使用TLS/SSL，可能需要额外的配置选项
+        };
+
+        // 使用MQTT.js的connect方法创建MQTT客户端实例
+        this.client = mqtt.connect(url, options);
+
+        // 监听连接事件
+        this.client.on('connect', () => {
+          console.log('Connected successfully!')
+          Notification({
+            title: 'Success',
+            message: 'Connected to MQTT Broker!',
+            type: 'success',
+            duration: 5000 // 显示时长(毫秒)
+          });
+          this.connecting = false;
+          // 连接成功后的其他操作...
+          this.setupMessageListener(); // 设置消息监听器
+        });
+
+        /*
+        // 监听连接错误事件
+        this.client.on('error', (error) => {
+          Notification({
+            title: 'Error',
+            message: `Connection error: ${error.message}`,
+            type: 'error',
+            duration: 5000 // 显示时长(毫秒)
+          });
+          this.connecting = false; // 更新连接状态
+          // 连接失败的其他操作...
+        });*/
+
+        // 监听连接结束事件
+        // this.client.on('close', () => {
+        //   if (this.client && !this.client.connected) {
+        //     Notification.error({
+        //       title: 'Connection Closed',
+        //       message: 'MQTT connection was closed.',
+        //       duration: 5000
+        //     });
+        //   }
+        //   this.connecting = false; // 更新连接状态
+        // });
       },
       // subscribe topic
       // https://github.com/mqttjs/MQTT.js#mqttclientsubscribetopictopic-arraytopic-object-options-callback
@@ -643,13 +755,39 @@
       },
       // publish message
       // https://github.com/mqttjs/MQTT.js#mqttclientpublishtopic-message-options-callback
+      //<!--猫-->
       doPublish() {
+        this.prepareData();
         const { topic, qos, payload } = this.publish
         this.client.publish(topic, payload, { qos }, error => {
           if (error) {
-            console.log('Publish error', error)
+            console.log('发送失败');
+            console.log('Publish error', error);
           }
+          else
+            console.log('发送成功');
         })
+      },
+      prepareData(){
+        if(this.publishState === 0){
+          let result;
+          result += '{';
+          for (let i = 0; i < Math.min(30, this.tableData.length); i++) {
+            const rawData = this.tableData[i].rawData;
+            if(i<Math.min(30, this.tableData.length)-1)
+              result += rawData + ',';
+            else
+            result += rawData + '}';
+          }
+          
+          this.$set(this.publish, 'payload', result);
+          this.publishState = 30;
+        }
+        else{
+          this.$set(this.publish, 'payload', this.tableData[this.publishState].rawData);
+          this.publishState++;
+        }
+        console.log(this.publish.payload);
       },
       // disconnect
       // https://github.com/mqttjs/MQTT.js#mqttclientendforce-options-callback
@@ -678,18 +816,10 @@
 
 <style lang="scss">
   @import url('../assets/style/home.scss');
-  
-  .fullscreen-background {
-    background-image: url('../../public/images/login_background.jpeg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    position: relative; /* Added relative positioning */
+  .selected-row {
+    background-color: #f2f2f2; /* Use your desired gray color for selected rows */
   }
-  
+
   .home-container {
     max-width: 1100px;
     margin: 0 auto;
