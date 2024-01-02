@@ -105,19 +105,24 @@
       // 假设登录成功后，将用户信息保存到本地存储或 Vuex 状态管理中
       localStorage.setItem('user', JSON.stringify(fakeLoginData));
 
+      /**
+       * {path:'/processing',component:Processing},
+    {path:'/source',component:Source},
+    {path:'/visualization',component:Visualization},
+       */
       let Direction;
       switch(this.loginForm.username){
         case 'zwc':
           Direction='home';
           break;
         case 'zwy':
-          Direction='publish';
+          Direction='source';
           break;
         case 'lc':
-          Direction='process';
+          Direction='processing';
           break;
         case 'ly':
-          Direction='subscribe';
+          Direction='visualization';
           break;
         case 'tyx':
           Direction='';

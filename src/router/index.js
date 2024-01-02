@@ -3,18 +3,18 @@ import Vue from 'vue'
 import VueRouter from "vue-router";
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
-import Publish from '../views/Publish.vue';
-import Process from '../views/Process.vue';
-import Subscribe from '../views/Subscribe.vue';
+import Source from '../views/Source.vue';
+import Processing from '../views/Processing.vue';
+import Visualization from '../views/Visualization.vue';
 
 Vue.use(VueRouter)
 const router = new VueRouter({
   routes:[
     {path:'/',component:Login},
     {path:'/home',component:Home},
-    {path:'/publish',component:Publish},
-    {path:'/process',component:Process},
-    {path:'/subscribe',component:Subscribe},
+    {path:'/processing',component:Processing},
+    {path:'/source',component:Source},
+    {path:'/visualization',component:Visualization},
   ]
 })
 
