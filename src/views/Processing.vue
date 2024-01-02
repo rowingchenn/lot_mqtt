@@ -1,9 +1,13 @@
 <template>
   <div class="background">
+<!-- 标题栏 -->
+<div style="background-color: pink; text-align: center; padding: 10px 0;border-radius: 15px;">
+      <h1>Data Processing Centre</h1>
+    </div>
     <router-link to="/">返回登录页面</router-link>
 
 <!-- 连接broker的卡片 -->
-<el-card shadow="always" style="margin-bottom:30px;">
+<el-card shadow="always" style="margin-top:40px;margin-left: 150px;width: 1350px;border-radius: 15px;">
       <div class="emq-title">
         Configuration
       </div>
@@ -74,13 +78,13 @@
       </el-form>
     </el-card>
     <!-- 订阅topic的卡片 -->
-    <el-card shadow="always" style="margin-bottom:30px;">
+    <el-card shadow="always" style="margin-top:50px;margin-left: 150px;width: 1350px;border-radius: 15px;">
       <div class="emq-title">
         Subscribe
       </div>
       <el-form ref="subscription" hide-required-asterisk size="small" label-position="top" :model="subscription">
         <el-row :gutter="20">
-          <el-col :span="8">
+          <el-col :span="6">
             <div class="custom-select-wrapper">
               <el-form-item prop="topic" label="Topic">
                 <el-select v-model="subscription.topic" placeholder="请选择">
@@ -94,14 +98,14 @@
               </el-form-item>
             </div>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="6">
             <el-form-item prop="qos" label="QoS">
               <el-select v-model="subscription.qos">
                 <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="6">
             <el-button
               :disabled="!client.connected"
               type="success"
@@ -127,54 +131,8 @@
       </el-form>
     </el-card>
 
-    <!-- 发布消息的卡片 -->
-    <el-card class="box-card" style="margin-bottom:30px;">
-      <div class="emq-title">
-        <span>Publish Message</span>
-      </div>
-      <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publishData">
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <div class="custom-select-wrapper">
-              <el-form-item prop="topic" label="Topic">
-                <el-select v-model="publishData.publishTopic" placeholder="请选择">
-                  <el-option
-                      v-for="item in topicOptions"
-                      :key="item.value"
-                      :label="item.label"
-                      :value="item.value">
-                  </el-option>
-                </el-select>
-              </el-form-item>
-            </div>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="qos" label="QoS">
-              <el-select v-model="publishData.qos">
-                <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="Message">
-          <!-- <el-input
-              type="textarea"
-              v-model="publishData.publishMessage"
-              placeholder="Enter message to publish">
-          </el-input> -->
-          <el-input
-            type="text"
-            v-model="publishData.publishMessage"
-            placeholder="Enter message to publish">
-          </el-input>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="button" @click="doPublish">Publish</el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
     <!-- 接收消息的卡片 -->
-    <el-card class="message-card" style="margin-bottom:30px;">
+    <!-- <el-card class="message-card" style="margin-bottom:30px;">
       <div class="emq-title">
         <span>Received Messages</span>
       </div>
@@ -195,18 +153,14 @@
           </el-timeline-item>
         </el-timeline>
       </div>
-    </el-card>
+    </el-card> -->
 
-    <!-- 标题栏 -->
-    <div style="background-color: pink; text-align: center; padding: 10px 0;border-radius: 15px;">
-      <h1>Data Processing Centre</h1>
-    </div>
-      <!-- 文件上传 -->
+    <!-- 文件上传 -->
   <!-- <input type="file" @change="handleFileUpload"> -->
   <el-row>
     <el-col :span="20" :offset="2">
       <!-- 卡片样式更新：增加圆角和阴影 -->
-      <el-card title="Received Data" style="height: 600px; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
+      <el-card title="Received Data" style="margin-top: 50px; height: 450px; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
         <h2>Received Data</h2>
 
         <div style="max-height: 400px; overflow-y: scroll;">
@@ -294,8 +248,8 @@
   <el-row style="margin-top: 50px;">
         <!-- 数据折线图 -->
         <el-col :span="20" :offset="2">
-      <el-card title="Data Line Chart" style="height: 500px;border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
-        <h3>Data Line Chart</h3>
+      <el-card title="Predicted Data Line Chart" style="height: 500px;border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
+        <h3>Predicted Data Line Chart</h3>
 
         <div ref="lineChart" style="width: 100%; height: 350px; border-radius: 10px; box-shadow: 0 2px 4px 0 rgba(0,0,0,0.1);"></div>
         <div style="text-align: right; margin-top: 10px;">
@@ -304,7 +258,52 @@
       </el-card>
     </el-col>
   </el-row>
-
+<!-- 发布消息的卡片 -->
+<el-card class="box-card" style="margin-top:50px;margin-left: 150px;width: 1350px;border-radius: 15px;">
+      <div class="emq-title">
+        <span>Publish Processed Data</span>
+      </div>
+      <el-form ref="publish" hide-required-asterisk size="small" label-position="top" :model="publishData">
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <div class="custom-select-wrapper">
+              <el-form-item prop="topic" label="Topic">
+                <el-select v-model="publishData.publishTopic" placeholder="请选择">
+                  <el-option
+                      v-for="item in topicOptions"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value">
+                  </el-option>
+                </el-select>
+              </el-form-item>
+            </div>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item prop="qos" label="QoS">
+              <el-select v-model="publishData.qos">
+                <el-option v-for="qos in qosList" :key="qos" :label="qos" :value="qos"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="Message">
+          <!-- <el-input
+              type="textarea"
+              v-model="publishData.publishMessage"
+              placeholder="Enter message to publish">
+          </el-input> -->
+          <el-input
+            type="text"
+            v-model="publishData.publishMessage"
+            placeholder="Processed and predicted data to publish">
+          </el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="button" @click="doPublish">Publish</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
     </div>
   </template>
 
@@ -553,7 +552,6 @@ createConnection() {
   this.sum_pro_Data = this.convertSummaryDataToString(this.summaryData);
   this.publishData.publishMessage=this.sum_pro_Data;
   return processedData.map(({ date, time, value }) => ({ date, time, value }));
-
 },
 calculateDailyStats(processedData) {
   const dailyData = {};
