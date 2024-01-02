@@ -74,6 +74,7 @@
     </el-card>
 
     <!-- 订阅topic的卡片 -->
+    <!-- 
     <el-card shadow="always" style="margin-bottom:30px;">
       <div class="emq-title">
         Subscribe
@@ -126,6 +127,7 @@
         </el-row>
       </el-form>
     </el-card>
+    -->
 
     <!-- 发布消息的卡片 -->
     <el-card class="box-card" style="margin-bottom:30px;">
@@ -202,6 +204,7 @@
           </div>
           -->
         </div>
+        <!--
         <el-form-item label="Message">
           <el-input
               type="textarea"
@@ -209,13 +212,15 @@
               placeholder="Enter message to publish">
           </el-input>
         </el-form-item>
+        -->
         <el-form-item>
-          <el-button type="button" @click="doPublish">Publish</el-button>
+          <el-button el-button size="small" type="primary" class="conn-btn" @click="doPublish">Publish</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- 接收消息的卡片 -->
+    <!--
     <el-card class="message-card" style="margin-bottom:30px;">
       <div class="emq-title">
         <span>Received Messages</span>
@@ -238,6 +243,7 @@
         </el-timeline>
       </div>
     </el-card>
+    -->
 
 <!--    <el-card shadow="always" style="margin-bottom:30px;">-->
 <!--      <div class="emq-title">-->
