@@ -1,6 +1,7 @@
 //import App from '../App';
 import Vue from 'vue'
 import VueRouter from "vue-router";
+import store from '../store';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Source from '../views/Source.vue';
@@ -18,22 +19,16 @@ const router = new VueRouter({
   ]
 })
 
-export default router
+router.beforeEach((to, from, next) => {
+  // 在全局前置守卫中执行断开连接的逻辑
+  console.log(store.getters.getClient);
+  if (store.getters.getClient && to.path === '/') {
+    store.dispatch('disconnectClient').then(() => {
+      next(); // 继续导航
+    });
+  } else {
+    next(); // 如果没有 client，直接继续导航
+  }
+});
 
-/*
-export default [{
-    path: '/',
-    component: App,
-    children: [{
-        path: '',
-        component: () => import('../views/Login.vue'),
-    }, {
-        path: '/home',
-        component: () => import('../views/Home.vue')
-        //component: r => require.ensure([], () => r(require('../views/home')), 'home')
-    }/*, {
-        path: '/score',
-        component: r => require.ensure([], () => r(require('../page/score')), 'score')
-    }]
-}]
-*/
+export default router

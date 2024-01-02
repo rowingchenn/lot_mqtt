@@ -15,6 +15,7 @@
     "mqtt": "^4.2.1",
     "vue": "2",
     "vue-router": "3",
+    "vuex": "3",
     "yarn": "^1.22.21"
   },
   "devDependencies": {

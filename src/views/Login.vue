@@ -65,6 +65,8 @@
 <script>
   import mqtt from 'mqtt'
   import { Notification } from 'element-ui';
+  import { mapActions, mapGetters } from 'vuex';
+
   export default {
     name: 'YourComponent',
     data() {
@@ -86,6 +88,33 @@
           connectTimeout: 300 * 1000, // ms
           reconnectPeriod: 4000, // ms
         },
+        subscription: {
+          topic: '',
+          qos: 0,
+        },
+        publishData: {
+          publishTopic: '',
+          publishMessage: '',
+          qos: 0
+        },
+        qosList: [0, 1, 2],
+        topicOptions: [
+          { value: 'humidity', label: 'humidity' },
+          { value: 'pressure', label: 'pressure' },
+          { value: 'temperature', label: 'temperature' },
+        ],
+        client: {
+          connected: false,
+        },
+        isUploading: false,
+        subscribeSuccess: false,
+        connecting: false,
+        retryTimes: 0,
+        fileContent: null,
+        tableData:null,
+        multipleSelection:null,
+        chart: null,
+        receivedMessages: [],
         codeUrl: "",
         loginForm: {
           option:"",//用于控制跳转的选项
@@ -112,44 +141,51 @@
         redirect: undefined,
       };
     },
+    computed: {
+      // 使用 mapGetters 将 getClient 映射到组件的 computed 中
+      ...mapGetters(['getClient']),
+    },
     methods: { 
+      ...mapActions(['setClient']),
+
       handleLogin(){
-      // 模拟登录逻辑，可以使用假数据或者硬编码
-      console.log('我在写伪登录...');
-      const fakeLoginData = {
-        username: 'exampleUser',
-        token: 'exampleToken',
-      };
+        // 模拟登录逻辑，可以使用假数据或者硬编码
+        console.log('我在写伪登录...');
+        const fakeLoginData = {
+          username: 'exampleUser',
+          token: 'exampleToken',
+        };
 
-      // 假设登录成功后，将用户信息保存到本地存储或 Vuex 状态管理中
-      localStorage.setItem('user', JSON.stringify(fakeLoginData));
+        // 假设登录成功后，将用户信息保存到本地存储或 Vuex 状态管理中
+        localStorage.setItem('user', JSON.stringify(fakeLoginData));
 
-      let Direction;
-      switch(this.connection.username){
-        case 'admin':
-          Direction='home';
-          break;
-        case 'processing':
-          Direction='processing';
-          break;
-        case 'visualization':
-          Direction='visualization';
-          break;
-        case 'source':
-          Direction='source';
-          break;
-      }
-      // 使用 $router 对象进行编程式导航到主页面
-      //this.$router.push('/'+this.loginForm.option);
+        let Direction;
+        switch(this.connection.username){
+          case 'admin':
+            Direction='home';
+            break;
+          case 'processing':
+            Direction='processing';
+            break;
+          case 'visualization':
+            Direction='visualization';
+            break;
+          case 'source':
+            Direction='source';
+            break;
+        }
+        // 使用 $router 对象进行编程式导航到主页面
+        //this.$router.push('/'+this.loginForm.option);
 
-      //在这里连接MQTT
-      this.createConnection();
-      //连接上了之后跳转对应的界面
+        //在这里连接MQTT
+        this.createConnection();
+        //连接上了之后跳转对应的界面
 
-      this.$router.push('/'+ Direction);
+        this.$router.push('/'+ Direction);
       },
       
       createConnection() {
+        this.setClient(this.client);
         // 构建连接URL
         const url = `${this.connection.protocol}://${this.connection.host}:${this.connection.port}`;
 
@@ -181,6 +217,7 @@
           this.connecting = false;
           // 连接成功后的其他操作...
           this.setupMessageListener(); // 设置消息监听器
+          this.setClient(this.client); // 将客户端实例保存到 Vuex store
         });
 
         /*
