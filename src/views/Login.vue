@@ -126,16 +126,16 @@
 
       let Direction;
       switch(this.connection.username){
-        case 'zwc':
+        case 'admin':
           Direction='home';
           break;
-        case 'lc':
+        case 'processing':
           Direction='processing';
           break;
-        case 'ly':
+        case 'visualization':
           Direction='visualization';
           break;
-        case 'admin':
+        case 'source':
           Direction='source';
           break;
       }
@@ -183,6 +183,7 @@
           this.setupMessageListener(); // 设置消息监听器
         });
 
+        /*
         // 监听连接错误事件
         this.client.on('error', (error) => {
           Notification({
@@ -193,7 +194,7 @@
           });
           this.connecting = false; // 更新连接状态
           // 连接失败的其他操作...
-        });
+        });*/
 
         // 监听连接结束事件
         this.client.on('close', () => {

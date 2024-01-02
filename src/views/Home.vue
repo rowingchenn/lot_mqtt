@@ -316,8 +316,8 @@ export default {
             .toString(16)
             .substring(2, 8),
         // auth
-        username: '',
-        password: '',
+        username: 'admin',
+        password: '127339',
         connectTimeout: 300 * 1000, // ms
         reconnectPeriod: 4000, // ms
       },
@@ -388,6 +388,7 @@ export default {
         this.setupMessageListener(); // 设置消息监听器
       });
 
+      /*
       // 监听连接错误事件
       this.client.on('error', (error) => {
         Notification({
@@ -398,7 +399,7 @@ export default {
         });
         this.connecting = false; // 更新连接状态
         // 连接失败的其他操作...
-      });
+      });*/
 
       // 监听连接结束事件
       this.client.on('close', () => {
