@@ -304,7 +304,11 @@
         </el-form-item>
       </el-form>
     </el-card>
-<div id="echart-container" style="width: 100%; height: 400px;"></div>
+    <el-card class="box-card" shadow="always" style="width: 100%; height: 500px; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
+      <h3>Data Change Line Chart</h3>
+
+  <div id="echart-container" style="width: 100%; height: 400px;"></div>
+</el-card>
 
     </div>
   </template>
@@ -350,7 +354,6 @@ import { Notification } from 'element-ui';
         { value: 'humidity', label: 'humidity' },
         { value: 'pressure', label: 'pressure' },
         { value: 'temperature', label: 'temperature' },
-        { value: 'processed_data', label: 'processed_data' },
       ],
       client: {
         connected: false,
