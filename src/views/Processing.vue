@@ -160,10 +160,10 @@
   <el-row>
     <el-col :span="20" :offset="2">
       <!-- 卡片样式更新：增加圆角和阴影 -->
-      <el-card title="Received Data" style="margin-top: 50px; height: 450px; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
+      <el-card title="Received Data" style="margin-top: 50px; height: 600px; border-radius: 15px; box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);">
         <h2>Received Data</h2>
 
-        <div style="max-height: 400px; overflow-y: scroll;">
+        <div style="max-height: 450px; overflow-y: scroll;">
         <el-timeline>
           <el-timeline-item
               v-for="(msg, index) in receivedMessages"
@@ -304,6 +304,8 @@
         </el-form-item>
       </el-form>
     </el-card>
+<div id="echart-container" style="width: 100%; height: 400px;"></div>
+
     </div>
   </template>
 
@@ -370,13 +372,24 @@ import { Notification } from 'element-ui';
         predictedData: [{"2014-02-14T04:50:00": "1.0", "2014-02-14T09:50:00": "4.0", "2014-02-14T12:20:00": "6.0", "2014-02-14T09:00:00": "3", "2014-02-14T16:20:00": "6.0", "2014-02-14T09:20:00": "3.0", "2014-02-14T19:00:00": "4", "2014-02-14T07:20:00": "2.0", "2014-02-14T06:50:00": "2.0", "2014-02-14T13:20:00": "5.0", "2014-02-14T10:00:00": "4", "2014-02-14T21:50:00": "4.0", "2014-02-14T07:50:00": "2.0", "2014-02-14T19:20:00": "3.0", "2014-02-14T14:50:00": "6.0", "2014-02-14T14:20:00": "6.0", "2014-02-14T04:00:00": "1", "2014-02-14T14:00:00": "6", "2014-02-14T23:00:00": "3", "2014-02-14T22:20:00": "4.0", "2014-02-14T13:00:00": "6", "2014-02-14T06:00:00": "2", "2014-02-14T19:50:00": "4.0", "2014-02-14T08:00:00": "2", "2014-02-14T08:20:00": "2.0", "2014-02-14T08:50:00": "3.0", "2014-02-14T11:20:00": "5.0", "2014-02-14T20:50:00": "3.0", "2014-02-14T05:00:00": "1", "2014-02-14T15:20:00": "6.0", "2014-02-14T05:20:00": "1.0", "2014-02-14T15:00:00": "6", "2014-02-14T07:00:00": "2", "2014-02-14T15:50:00": "6.0", "2014-02-14T21:20:00": "3.0", "2014-02-14T17:00:00": "5", "2014-02-14T22:50:00": "3.0", "2014-02-14T17:20:00": "5.0", "2014-02-14T17:50:00": "5.0", "2014-02-14T04:20:00": "1.0", "2014-02-14T01:50:00": "1.0", "2014-02-14T22:00:00": "4", "2014-02-14T01:00:00": "2", "2014-02-14T06:20:00": "2.0", "2014-02-14T01:20:00": "1.0", "2014-02-14T20:20:00": "4.0", "2014-02-14T02:20:00": "1.0", "2014-02-14T02:00:00": "1", "2014-02-14T16:00:00": "6", "2014-02-14T02:50:00": "1.0", "2014-02-14T10:50:00": "5.0", "2014-02-14T18:20:00": "4.0", "2014-02-14T18:00:00": "4", "2014-02-14T03:50:00": "1.0", "2014-02-14T03:20:00": "1.0", "2014-02-14T23:20:00": "3.0", "2014-02-14T03:00:00": "1", "2014-02-14T12:50:00": "6.0", "2014-02-14T16:50:00": "5.0", "2014-02-14T13:50:00": "6.0", "2014-02-14T11:50:00": "5.0", "2014-02-14T23:50:00": "3.0", "2014-02-14T12:00:00": "6", "2014-02-14T20:00:00": "4", "2014-02-14T00:00:00": "2", "2014-02-14T00:20:00": "2.0", "2014-02-14T00:50:00": "1.0", "2014-02-14T05:50:00": "2.0", "2014-02-14T18:50:00": "4.0"}
 ],  // 预测的数据数组
 formattedPredictedData: [],
-chartInstance: null,
+echartInstance: null,
+
       };
     },
     mounted() {
     this.formatPredictedData();
     this.initChart();
     this.updateChartData();
+    this.initEChart();
+
+  },
+    watch: {
+    processedData: {
+      handler() {
+        this.updateEChart();
+      },
+      deep: true,
+    },
   },
   methods: {
     formatPredictedData() {
@@ -701,7 +714,29 @@ convertSummaryDataToString(summaryData) {
         }
         dateMap[date].push(Number(value));
       });
-  }
+  },
+  initEChart() {
+      const dom = document.getElementById('echart-container');
+      this.echartInstance = echarts.init(dom);
+      this.updateEChart();
+    },
+    updateEChart() {
+      const option = {
+        xAxis: {
+          type: 'category',
+          data: this.processedData.map(item => item.date),
+        },
+        yAxis: {
+          type: 'value',
+        },
+        series: [{
+          data: this.processedData.map(item => item.value),
+          type: 'line',
+        }],
+      };
+
+      this.echartInstance.setOption(option);
+    },
 }
 }
 </script>
