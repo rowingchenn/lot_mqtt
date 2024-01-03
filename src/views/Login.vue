@@ -172,6 +172,14 @@
             if(this.loginForm.password === '123456')
               Direction='source';
             break;
+          default:
+            Direction='';
+            Notification.error({
+                title: 'Login Error',
+                message: 'Incorrect username or password',
+                duration: 5000
+              });
+            break;
         }
         // 使用 $router 对象进行编程式导航到主页面
         //this.$router.push('/'+this.loginForm.option);
